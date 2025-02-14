@@ -1,2 +1,2 @@
-# server-set-ups 
+# serverSetUp 
 we okay
