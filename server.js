@@ -8,17 +8,19 @@ import 'dotenv/config';
 
 // set up the actual express  application
 const app = express(); 
+app.use(cors());
 
+app.use(bodyParser.json());
 // select the port for your application
 //just use 3000 please
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 //setting up necessary information for the MySQL server connection
 const db = mysql.createConnection ({
     host: 'thresholds-test.mysql.database.azure.com',
-    user: 'egonzalez', //MySql username (first initial + last name)
-    port: '3306',     //Replace with your port number (if not 3306) but 3306 is the default port
-    password: 'test', //MySql password
+    user: process.env.USERNAME, //MySql username (first initial + last name)
+    port: process.env.PORT,     //Replace with your port number (if not 3306) but 3306 is the default port
+    password: process.env.PASSWORD, //MySql password
     database: 'egonzalez_tasks' //MySql database name 
 });
 
@@ -60,10 +62,98 @@ app.get('/tasks', (req,res) => {
     })
 });
 
+
+app.post('/tasks/add', (req, res) => {
+    const params = [req.body['title'], req.body['description'], req.body['is_completed']];
+
+    const query = "INSERT INTO tasks (title, description, is_completed) VALUES (?, ?, ?);";
+
+    db.query(query, params, (err, results) => {
+        if(err) {
+            console.log(`whoops! could not add task, error mesage is ' ${err}'`);
+            res.status(500).json({error: 'Error adding task.'});
+        } 
+        else {
+            console.log(results[0]);
+            res.json(results);
+        }
+    });
+});
+
+app.put('/tasks/fullUpdate/:id', (req, res) => {
+    const taskId = req.params.id;
+    const { title, description, is_completed } = req.body;
+    const params = [title, description, is_completed, taskId];
+
+    const query = "UPDATE tasks SET title = ?, description = ?, is_completed = ? WHERE id = ?;";
+
+    db.query(query, params, (err, results) => {
+        if(err) {
+            console.log(`whoops! could not update task, error mesage is ' ${err}'`);
+            res.status(500).json({error: 'Error updating task.'});
+        } 
+        else {
+            console.log(results[0]);
+            res.json(results);
+        }
+    });
+});
+
+app.delete('/tasks/delete/:id', (req, res) => {
+    const taskId = req.params.id;
+    const query = "DELETE FROM tasks WHERE id = ?;";
+
+    db.query(query, taskId, (err, results) => {
+        if(err) {
+            console.log(`whoops! could not delete task, error mesage is ' ${err}'`);
+            res.status(500).json({error: 'Error deleting task.'});
+
+        } else if (results.affectedRows === 0) {
+            res.status(404).json({ error: "Task not found." });
+
+        } else {
+            console.log(results[0]);
+            res.json(results);
+        }
+    });
+});
+
+//this is a catch all route
+//if the user tries to access a route that does not exist
+
+app.all('*', (req, res) => {
+    res.status(404).send('Page not found');
+});
+
+app.patch ('/tasks/partUpdate', (req, res) => {
+    const taskId = req.params.id;
+    const { is_completed } = req.body;
+    const params = [is_completed, taskId];
+
+    const query = "UPDATE tasks SET is_completed = ? WHERE id = ?;";
+
+    db.query(query, params, (err, results) => {
+        if(err) {
+            console.log(`whoops! could not update task, error mesage is ' ${err}'`);
+            res.status(500).json({error: 'Error updating task.'});
+        } 
+        else {
+            console.log(results[0]);
+            res.json(results);
+        }
+    });
+});
+
+
+
+
+
+
+
+
 //actually start the Express server 
 //this has to be at the end of the file
 app.listen(port, () => {
     console.log('Server is running on port ' + port);
     console.log('Press Ctrl+C to quit.');
 });
-
