@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {request, response} from 'express';
 import cors from 'cors';
 import mysql from 'mysql2'; 
 import bodyParser from 'body-parser';
@@ -8,20 +8,24 @@ import 'dotenv/config';
 
 // set up the actual express  application
 const app = express(); 
-app.use(cors());
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // select the port for your application
 //just use 3000 please
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
+app.use(cors({ origin: 'http://localhost:5173' }));
+
 
 //setting up necessary information for the MySQL server connection
 const db = mysql.createConnection ({
     host: 'thresholds-test.mysql.database.azure.com',
-    user: process.env.USERNAME, //MySql username (first initial + last name)
-    port: process.env.PORT,     //Replace with your port number (if not 3306) but 3306 is the default port
-    password: process.env.PASSWORD, //MySql password
+    user: 'egonzalez', //process.env.USERNAME, //MySql username (first initial + last name)
+    port: 3306, //process.env.PORT,     //Replace with your port number (if not 3306) but 3306 is the default port
+    password: 'test', //process.env.PASSWORD, //MySql password
     database: 'egonzalez_tasks' //MySql database name 
+   // ssl: { rejectUnauthorized: true } //this ensures an encrypted connection to the database
 });
 
 //actually establishes the database connection
@@ -75,7 +79,7 @@ app.post('/tasks/add', (req, res) => {
         } 
         else {
             console.log(results[0]);
-            res.json(results);
+            res.json({ message: "Task added successfully.", id: results.insertId })
         }
     });
 });
@@ -121,11 +125,11 @@ app.delete('/tasks/delete/:id', (req, res) => {
 //this is a catch all route
 //if the user tries to access a route that does not exist
 
-app.all('*', (req, res) => {
-    res.status(404).send('Page not found');
-});
+// app.all('*', (req, res) => {
+//     res.status(404).send('Page not found');
+// });
 
-app.patch ('/tasks/partUpdate', (req, res) => {
+app.patch ('/tasks/partUpdate/:id', (req, res) => {
     const taskId = req.params.id;
     const { is_completed } = req.body;
     const params = [is_completed, taskId];
