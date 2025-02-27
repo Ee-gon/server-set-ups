@@ -20,11 +20,11 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 
 //setting up necessary information for the MySQL server connection
 const db = mysql.createConnection ({
-    host: 'thresholds-test.mysql.database.azure.com',
-    user: 'egonzalez', //process.env.USERNAME, //MySql username (first initial + last name)
-    port: 3306, //process.env.PORT,     //Replace with your port number (if not 3306) but 3306 is the default port
-    password: 'test', //process.env.PASSWORD, //MySql password
-    database: 'egonzalez_tasks' //MySql database name 
+    host: process.env.SERVERHOST,
+    user: process.env.SQL_USERNAME, //MySql username (no + no)
+    port: process.env.PORT,     //Replace with your port number (if not 3306) but 3306 is the default port
+    password: process.env.PASSWORD, //MySql password
+    database: process.env.DATABASE //MySql database name 
    // ssl: { rejectUnauthorized: true } //this ensures an encrypted connection to the database
 });
 
